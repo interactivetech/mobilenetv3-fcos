@@ -314,6 +314,33 @@ def get_detection_model2(num_classes):
     anchor_generator=anchor_generator,
     )
     return model
+
+def get_detection_model2_ddp(num_classes):
+    trainable_backbone_layers = 6
+    # trainable_backbone_layers=5
+    pretrained_backbone = False
+    reduce_tail = True
+    norm_layer = None
+    b_model = torchvision.models.mobilenet_v3_large(pretrained=True)
+    is_trained=True
+    norm_layer = torchvision.ops.misc.FrozenBatchNorm2d if is_trained else nn.BatchNorm2d
+    backbone = _mobilenet_extractor(b_model, 
+                                fpn=True,
+                                trainable_layers=6,
+                                returned_layers=[1,2,3,4,5])
+    anchor_sizes = ((8,), (16,), (32,), (64,), (128,),(256,))
+    anchor_generator = AnchorGenerator(
+    sizes=anchor_sizes,
+    aspect_ratios=((1.0,),)* len(anchor_sizes) 
+    )   
+    model = FCOS(
+    backbone,
+    num_classes=num_classes,
+    anchor_generator=anchor_generator,
+    )
+    model = nn.DataParallel(model,device_ids=[0,1,2,3],output_device=[0])
+
+    return model
 """That's it, this will make model be ready to be trained and evaluated on our custom dataset.
 
 ## Training and evaluation functions
@@ -397,8 +424,10 @@ dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
 # split the dataset in train and test set
 torch.manual_seed(1)
 indices = torch.randperm(len(dataset)).tolist()
-dataset = torch.utils.data.Subset(dataset, indices[:-50])
-dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+# dataset = torch.utils.data.Subset(dataset, indices[:-50])
+# dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+dataset = torch.utils.data.Subset(dataset, indices)
+dataset_test = torch.utils.data.Subset(dataset_test, indices)
 
 # define training and validation data loaders
 data_loader = torch.utils.data.DataLoader(
@@ -419,13 +448,14 @@ num_classes = 2
 # get the model using our helper function
 # model = get_instance_segmentation_model(num_classes)
 # model = get_detection_model(num_classes)
-model = get_detection_model2(num_classes)
+# model = get_detection_model2(num_classes)
+model = get_detection_model2_ddp(num_classes)
 # move model to the right device
 model.to(device)
 
 # construct an optimizer
-params = [p for p in model.parameters() if p.requires_grad]
-optimizer = torch.optim.SGD(params, lr=0.005,
+# params = [p for p in model.parameters() if p.requires_grad]
+optimizer = torch.optim.SGD(model.parameters(), lr=0.005,
                             momentum=0.9, weight_decay=0.0005)
 
 # and a learning rate scheduler which decreases the learning rate by
@@ -456,6 +486,8 @@ img, _ = dataset_test[0]
 model.eval()
 with torch.no_grad():
     prediction = model([img.to(device)])
+print(prediction)
+torch.save(model.module.state_dict(),'mobilenetv3_fcos_{}.pth'.format(epoch))
 
 """Printing the prediction shows that we have a list of dictionaries. Each element of the list corresponds to a different image. As we have a single image, there is a single dictionary in the list.
 The dictionary contains the predictions for the image we passed. In this case, we can see that it contains `boxes`, `labels`, `masks` and `scores` as fields.
