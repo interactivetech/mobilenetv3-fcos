@@ -34,9 +34,10 @@ from group_by_aspect_ratio import create_aspect_ratio_groups, GroupedBatchSample
 from torchvision.transforms import InterpolationMode
 from transforms import SimpleCopyPaste
 from torchvision.models.detection.backbone_utils import _mobilenet_extractor, _resnet_fpn_extractor
-from torchvision.models.detection import FCOS
+# from torchvision.models.detection import FCOS
+from fcos_updated import FCOS
 from torchvision.models.detection.anchor_utils import AnchorGenerator
-def get_detection_model2(num_classes):
+def get_mv3_fcos_fpn(num_classes):
     trainable_backbone_layers = 6
     # trainable_backbone_layers=5
     pretrained_backbone = False
@@ -60,7 +61,33 @@ def get_detection_model2(num_classes):
     anchor_generator=anchor_generator,
     )
     return model
+     
+def get_mv3_fcos_no_fpn(num_classes):
 
+     backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+     # FCOS needs to know the number of
+     # output channels in a backbone. For mobilenet_v2, it's 1280
+     # so we need to add it here
+     backbone.out_channels = 1280
+    
+     # let's make the network generate 5 x 3 anchors per spatial
+     # location, with 5 different sizes and 3 different aspect
+     # ratios. We have a Tuple[Tuple[int]] because each feature
+     # map could potentially have different sizes and
+     # aspect ratios
+     anchor_sizes = ((128,))
+     anchor_generator = AnchorGenerator(
+         sizes=anchor_sizes,
+         aspect_ratios=((1.0,),)
+     )
+    
+     # put the pieces together inside a FCOS model
+     model = FCOS(
+         backbone,
+         num_classes=num_classes,
+         anchor_generator=anchor_generator,
+     )
+     return model
 def copypaste_collate_fn(batch):
     copypaste = SimpleCopyPaste(blending=True, resize_interpolation=InterpolationMode.BILINEAR)
     return copypaste(*utils.collate_fn(batch))
@@ -248,7 +275,7 @@ def main(args):
             args.model, weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, **kwargs
         )
     elif args.model == 'mobilenet_v3_fcos':
-        model = get_detection_model2(num_classes)
+        model = get_mv3_fcos_no_fpn(num_classes)
     model.to(device)
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
