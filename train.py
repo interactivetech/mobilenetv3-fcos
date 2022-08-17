@@ -33,61 +33,8 @@ from engine import evaluate, train_one_epoch
 from group_by_aspect_ratio import create_aspect_ratio_groups, GroupedBatchSampler
 from torchvision.transforms import InterpolationMode
 from transforms import SimpleCopyPaste
-from torchvision.models.detection.backbone_utils import _mobilenet_extractor, _resnet_fpn_extractor
-# from torchvision.models.detection import FCOS
-from fcos_updated import FCOS
-from torchvision.models.detection.anchor_utils import AnchorGenerator
-def get_mv3_fcos_fpn(num_classes):
-    trainable_backbone_layers = 6
-    # trainable_backbone_layers=5
-    pretrained_backbone = False
-    reduce_tail = True
-    norm_layer = None
-    b_model = torchvision.models.mobilenet_v3_large(pretrained=True)
-    is_trained=True
-    norm_layer = torchvision.ops.misc.FrozenBatchNorm2d if is_trained else nn.BatchNorm2d
-    backbone = _mobilenet_extractor(b_model, 
-                                fpn=True,
-                                trainable_layers=6,
-                                returned_layers=[1,2,3,4,5])
-    anchor_sizes = ((8,), (16,), (32,), (64,), (128,),(256,))
-    anchor_generator = AnchorGenerator(
-    sizes=anchor_sizes,
-    aspect_ratios=((1.0,),)* len(anchor_sizes) 
-    )   
-    model = FCOS(
-    backbone,
-    num_classes=num_classes,
-    anchor_generator=anchor_generator,
-    )
-    return model
-     
-def get_mv3_fcos_no_fpn(num_classes):
+from model import get_mv3_fcos_fpn, get_mv3_fcos_no_fpn, get_mobileone_s4_no_fpn
 
-     backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-     # FCOS needs to know the number of
-     # output channels in a backbone. For mobilenet_v2, it's 1280
-     # so we need to add it here
-     backbone.out_channels = 1280
-    
-     # let's make the network generate 5 x 3 anchors per spatial
-     # location, with 5 different sizes and 3 different aspect
-     # ratios. We have a Tuple[Tuple[int]] because each feature
-     # map could potentially have different sizes and
-     # aspect ratios
-     anchor_sizes = ((128,))
-     anchor_generator = AnchorGenerator(
-         sizes=anchor_sizes,
-         aspect_ratios=((1.0,),)
-     )
-    
-     # put the pieces together inside a FCOS model
-     model = FCOS(
-         backbone,
-         num_classes=num_classes,
-         anchor_generator=anchor_generator,
-     )
-     return model
 def copypaste_collate_fn(batch):
     copypaste = SimpleCopyPaste(blending=True, resize_interpolation=InterpolationMode.BILINEAR)
     return copypaste(*utils.collate_fn(batch))
@@ -270,12 +217,14 @@ def main(args):
     if "rcnn" in args.model:
         if args.rpn_score_thresh is not None:
             kwargs["rpn_score_thresh"] = args.rpn_score_thresh
-    if args.model != 'mobilenet_v3_fcos':
+    if args.model != 'mobilenet_v3_fcos' and args.model != 'mobileone_s4_fcos' :
         model = torchvision.models.get_model(
             args.model, weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, **kwargs
         )
     elif args.model == 'mobilenet_v3_fcos':
         model = get_mv3_fcos_no_fpn(num_classes)
+    elif args.model == 'mobileone_s4_fcos':
+        model = get_mobileone_s4_no_fpn(num_classes)
     model.to(device)
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
