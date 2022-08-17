@@ -26,3 +26,30 @@ IoU metric: bbox
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.57073
 Training time 8:16:55
 ```
+
+# Result Training MobilenetV3 (No FPN) on MiniCOCO Train
+```
+Test: Total time: 0:00:43 (0.0350 s / it)
+Averaged stats: model_time: 0.0244 (0.0258)  evaluator_time: 0.0054 (0.0075)
+Accumulating evaluation results...
+DONE (t=5.87s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.14914
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.28572
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.13886
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.02752
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.15849
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.27897
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.15520
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.23457
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.24191
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.03601
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.23545
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.48418
+Training time 2:46:21
+```
+# ToDo
+* Mobileone FPN Train Exp
+* Mobileone No FPN Train Exp
+* Full COCO MV3 FPN TRAIN using Determined.ai
+* Full COCO Mobileone FPN TRAIN using Determined.ai

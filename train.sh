@@ -6,5 +6,6 @@ torchrun --nproc_per_node=4 train.py \
     --lr-steps 16 22 \
     --aspect-ratio-group-factor 3 \
     --lr 0.01 \
+    --batch-size 12 \
     --amp \
     --weights-backbone ResNet50_Weights.IMAGENET1K_V1
