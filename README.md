@@ -9,6 +9,7 @@ Test using Torchvision API to train an FCOS model with MobilenetV3 FPN backbone
 * `bash train.sh`
 
 # Result Training for 26 Epochs
+Dataset to train (20% of COCO Dataset) `instances_train2017_minicoco.json` from: https://github.com/giddyyupp/coco-minitrain
 ```
 IoU metric: bbox
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.20658
