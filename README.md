@@ -48,8 +48,77 @@ IoU metric: bbox
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.48418
 Training time 2:46:21
 ```
+
+# MobileOne S4 No FPN Train (23 Epochs)
+```
+DONE (t=8.01s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.11387
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.25558
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.08531
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.05117
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.16744
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.16577
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.13663
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.24625
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.26201
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.06828
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.32610
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.42676
+```
+
+Train Settings:
+```
+torchrun --nproc_per_node=4 train.py \
+    --dataset coco \
+    --data-path=/mnt/18f3044b-5d9f-4d98-8083-e88a3cf4ab35/coco_dataset/ \
+    --model mobileone_s4_fcos \
+    --epochs 26 \
+    --lr-steps 16 22 \
+    --aspect-ratio-group-factor 3 \
+    --lr 0.0005 \
+    --batch-size 7 \
+    --workers 2 \
+    --amp \
+    --weights-backbone ResNet50_Weights.IMAGENET1K_V1
+```
+
+# Mobileone FPN Train Exp
+'''
+Averaged stats: model_time: 0.2638 (0.2495)  evaluator_time: 0.0041 (0.0051)
+Accumulating evaluation results...
+DONE (t=3.77s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.15720
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.30767
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.14181
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.07788
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.19181
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.19617
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.16918
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.27215
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.27527
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.09949
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.30088
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.41984
+Training time 1 day, 4:32:46
+'''
+
+Training Settings:
+'''
+torchrun --nproc_per_node=4 train.py \
+    --dataset coco \
+    --data-path=/mnt/18f3044b-5d9f-4d98-8083-e88a3cf4ab35/coco_dataset/ \
+    --model mobileone_s4_fpn_fcos \
+    --epochs 26 \
+    --lr-steps 16 22 \
+    --aspect-ratio-group-factor 3 \
+    --lr 0.001 \
+    --batch-size 1 \
+    --workers 2 \
+    --amp \
+    --weights-backbone ResNet50_Weights.IMAGENET1K_V1
+'''
 # ToDo
-* Mobileone FPN Train Exp
-* Mobileone No FPN Train Exp
 * Full COCO MV3 FPN TRAIN using Determined.ai
 * Full COCO Mobileone FPN TRAIN using Determined.ai

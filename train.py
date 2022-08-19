@@ -33,7 +33,7 @@ from engine import evaluate, train_one_epoch
 from group_by_aspect_ratio import create_aspect_ratio_groups, GroupedBatchSampler
 from torchvision.transforms import InterpolationMode
 from transforms import SimpleCopyPaste
-from model import get_mv3_fcos_fpn, get_mv3_fcos_no_fpn, get_mobileone_s4_no_fpn
+from model import get_mv3_fcos_fpn, get_mv3_fcos_no_fpn, get_mobileone_s4_no_fpn, get_mobileone_s4_fpn_fcos
 
 def copypaste_collate_fn(batch):
     copypaste = SimpleCopyPaste(blending=True, resize_interpolation=InterpolationMode.BILINEAR)
@@ -217,21 +217,23 @@ def main(args):
     if "rcnn" in args.model:
         if args.rpn_score_thresh is not None:
             kwargs["rpn_score_thresh"] = args.rpn_score_thresh
-    if args.model != 'mobilenet_v3_fcos' and args.model != 'mobileone_s4_fcos' :
-        model = torchvision.models.get_model(
-            args.model, weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, **kwargs
-        )
-    elif args.model == 'mobilenet_v3_fcos':
+    if args.model == 'mobilenet_v3_fcos':
         model = get_mv3_fcos_no_fpn(num_classes)
     elif args.model == 'mobileone_s4_fcos':
         model = get_mobileone_s4_no_fpn(num_classes)
+    elif args.model == 'mobileone_s4_fpn_fcos':
+        model = get_mobileone_s4_fpn_fcos(num_classes)
+    else:
+        model = torchvision.models.get_model(
+            args.model, weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, **kwargs
+        )
     model.to(device)
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu],find_unused_parameters=True)
         model_without_ddp = model.module
 
     if args.norm_weight_decay is None:
