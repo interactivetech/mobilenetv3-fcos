@@ -8,7 +8,6 @@ import transforms as T
 from pycocotools import mask as coco_mask
 from pycocotools.coco import COCO
 
-
 class FilterAndRemapCocoCategories:
     def __init__(self, categories, remap=True):
         self.categories = categories
